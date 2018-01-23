@@ -33,7 +33,6 @@
 'use strict';
 
 var _ = require('lodash');
-var arguejs = require('arguejs');
 
 var grpc = require('./grpc_extension');
 
@@ -504,17 +503,17 @@ Client.prototype.makeUnaryRequest = function(method, serialize, deserialize,
    * are not used directly. Instead, ArgueJS processes the arguments
    * object. This allows for simple handling of optional arguments in the
    * middle of the argument list, and also provides type checking. */
-  var args = arguejs({method: String, serialize: Function,
-                      deserialize: Function,
-                      argument: null, metadata: [Metadata, new Metadata()],
-                      options: [Object], callback: Function}, arguments);
-  var call = getCall(this.$channel, method, args.options);
+  // var args = arguejs({method: String, serialize: Function,
+  //                     deserialize: Function,
+  //                     argument: null, metadata: [Metadata, new Metadata()],
+  //                     options: [Object], callback: Function}, arguments);
+  var call = getCall(this.$channel, method, options);
   var emitter = new ClientUnaryCall(call);
-  metadata = args.metadata.clone();
+  metadata = metadata.clone();
   var client_batch = {};
-  var message = serialize(args.argument);
-  if (args.options) {
-    message.grpcWriteFlags = args.options.flags;
+  var message = serialize(argument);
+  if (options) {
+    message.grpcWriteFlags = options.flags;
   }
 
   client_batch[grpc.opType.SEND_INITIAL_METADATA] =
@@ -535,7 +534,7 @@ Client.prototype.makeUnaryRequest = function(method, serialize, deserialize,
     if (status.code === constants.status.OK) {
       if (err) {
         // Got a batch error, but OK status. Something went wrong
-        args.callback(err);
+        callback(err);
         return;
       } else {
         try {
@@ -554,9 +553,9 @@ Client.prototype.makeUnaryRequest = function(method, serialize, deserialize,
       error = new Error(status.details);
       error.code = status.code;
       error.metadata = status.metadata;
-      args.callback(error);
+      callback(error);
     } else {
-      args.callback(null, deserialized);
+      callback(null, deserialized);
     }
     emitter.emit('status', status);
   });
@@ -586,12 +585,12 @@ Client.prototype.makeClientStreamRequest = function(method, serialize,
    * are not used directly. Instead, ArgueJS processes the arguments
    * object. This allows for simple handling of optional arguments in the
    * middle of the argument list, and also provides type checking. */
-  var args = arguejs({method:String, serialize: Function,
-                      deserialize: Function,
-                      metadata: [Metadata, new Metadata()],
-                      options: [Object], callback: Function}, arguments);
-  var call = getCall(this.$channel, method, args.options);
-  metadata = args.metadata.clone();
+  // var args = arguejs({method:String, serialize: Function,
+  //                     deserialize: Function,
+  //                     metadata: [Metadata, new Metadata()],
+  //                     options: [Object], callback: Function}, arguments);
+  var call = getCall(this.$channel, method, options);
+  metadata = metadata.clone();
   var stream = new ClientWritableStream(call, serialize);
   var metadata_batch = {};
   metadata_batch[grpc.opType.SEND_INITIAL_METADATA] =
@@ -618,7 +617,7 @@ Client.prototype.makeClientStreamRequest = function(method, serialize,
     if (status.code === constants.status.OK) {
       if (err) {
         // Got a batch error, but OK status. Something went wrong
-        args.callback(err);
+        callback(err);
         return;
       } else {
         try {
@@ -637,9 +636,9 @@ Client.prototype.makeClientStreamRequest = function(method, serialize,
       error = new Error(response.status.details);
       error.code = status.code;
       error.metadata = status.metadata;
-      args.callback(error);
+      callback(error);
     } else {
-      args.callback(null, deserialized);
+      callback(null, deserialized);
     }
     stream.emit('status', status);
   });
@@ -667,17 +666,17 @@ Client.prototype.makeServerStreamRequest = function(method, serialize,
   /* While the arguments are listed in the function signature, those variables
    * are not used directly. Instead, ArgueJS processes the arguments
    * object. */
-  var args = arguejs({method:String, serialize: Function,
-                      deserialize: Function,
-                      argument: null, metadata: [Metadata, new Metadata()],
-                      options: [Object]}, arguments);
-  var call = getCall(this.$channel, method, args.options);
-  metadata = args.metadata.clone();
+  // var args = arguejs({method:String, serialize: Function,
+  //                     deserialize: Function,
+  //                     argument: null, metadata: [Metadata, new Metadata()],
+  //                     options: [Object]}, arguments);
+  var call = getCall(this.$channel, method, options);
+  metadata = metadata.clone();
   var stream = new ClientReadableStream(call, deserialize);
   var start_batch = {};
-  var message = serialize(args.argument);
-  if (args.options) {
-    message.grpcWriteFlags = args.options.flags;
+  var message = serialize(argument);
+  if (options) {
+    message.grpcWriteFlags = options.flags;
   }
   start_batch[grpc.opType.SEND_INITIAL_METADATA] =
       metadata._getCoreRepresentation();
@@ -725,12 +724,12 @@ Client.prototype.makeBidiStreamRequest = function(method, serialize,
   /* While the arguments are listed in the function signature, those variables
    * are not used directly. Instead, ArgueJS processes the arguments
    * object. */
-  var args = arguejs({method:String, serialize: Function,
-                      deserialize: Function,
-                      metadata: [Metadata, new Metadata()],
-                      options: [Object]}, arguments);
-  var call = getCall(this.$channel, method, args.options);
-  metadata = args.metadata.clone();
+  // var args = arguejs({method:String, serialize: Function,
+  //                     deserialize: Function,
+  //                     metadata: [Metadata, new Metadata()],
+  //                     options: [Object]}, arguments);
+  var call = getCall(this.$channel, method, options);
+  metadata = metadata.clone();
   var stream = new ClientDuplexStream(call, serialize, deserialize);
   var start_batch = {};
   start_batch[grpc.opType.SEND_INITIAL_METADATA] =
